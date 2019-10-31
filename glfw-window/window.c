@@ -19,30 +19,36 @@ void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void ErrorCallback(int error, const char* description)
+{
+    fprintf(stderr, "Error: %s\n", description);
+}
+
 int main()
 {
-    glfwInit();
+    if (!glfwInit())
+    {
+        return -1;
+    }
 
     GLFWwindow* window = CreateWindow("Window");
 
-    if (window)
+    if (window && gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {   
         glfwSetKeyCallback(window, KeyCallback);
         glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);  
-        glfwMakeContextCurrent(window);
-        glfwSwapInterval(1);
+        glfwSetErrorCallback(ErrorCallback);
 
-        if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        while (!glfwWindowShouldClose(window))
         {
-            while (!glfwWindowShouldClose(window))
-            {
-                glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-                glClear(GL_COLOR_BUFFER_BIT);
+            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
 
-                glfwSwapBuffers(window);
-                glfwPollEvents();
-            }
+            glfwSwapBuffers(window);
+            glfwPollEvents();
         }
+        glfwDestroyWindow(window);
     }
+
 }
 

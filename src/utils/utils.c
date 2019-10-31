@@ -4,11 +4,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-void ErrorCallback(int error, const char* description)
-{
-    fprintf(stderr, "Error: %s\n", description);
-}
-
 GLFWwindow* CreateWindow(const char* title)
 {
     GLFWwindow* result = glfwCreateWindow(800, 600, title, NULL, NULL);
@@ -23,7 +18,6 @@ GLFWwindow* CreateWindow(const char* title)
 #endif
         glfwMakeContextCurrent(result);
         glfwSwapInterval(1);
-        glfwSetErrorCallback(ErrorCallback);
     }
 
     return result;
