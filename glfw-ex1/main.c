@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "utils/utils.h"
+#include <stdio.h>
 
 // Try to draw 2 triangles next to each other using glDrawArrays by adding more vertices to your data.
 
@@ -12,6 +13,14 @@ typedef GLuint VBO;
 void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+}
+
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
 }
 
 VBO CreateVBO()
@@ -57,28 +66,56 @@ Shader CreateShaderProgram(Shader vertex, Shader fragment)
     return program;
 }
 
+const char* vertexShaderSource = 
+"#version 330 core\n\
+layout (location = 0) in vec3 aPos;\
+\
+void main()\
+{\
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\
+}";
+
+const char* fragmentShaderSource = 
+"#version 330 core\n\
+out vec4 FragColor;\
+\
+void main()\
+{\
+    FragColor = vec4(1.0f, 0.5f, 0.2f, 0.75f);\
+}";
+
 int main()
 {
-    if (glfwInit())
-    {
-        GLFWwindow* window = CreateWindow("Exercise 1");
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        if (window && gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+#if __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
+    GLFWwindow* window = glfwCreateWindow(640, 480, "GLFW - OpenGL", NULL, NULL);
+
+    if (window)
+    {   
+        glfwSetKeyCallback(window, KeyCallback);
+        glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);  
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
+
+        if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
-            glfwMakeContextCurrent(window);
-            glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
-
-            const char* vertexShaderSource = ReadTextFile("glfw-ex1/ex1.vert");
-            const char* fragmentShaderSource = ReadTextFile("glfw-ex1/ex1.frag");
-
+            //TODO: fix file loading issue
+            //TODO: switch to makefiles
             if (fragmentShaderSource && vertexShaderSource)
             {
                 Shader vertex = CreateShader(GL_VERTEX_SHADER, vertexShaderSource);
-                CheckShaderState(vertex, window);
+                Utils_CheckShaderState(vertex, window);
                 Shader fragment = CreateShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
-                CheckShaderState(fragment, window);
+                Utils_CheckShaderState(fragment, window);
                 Program program = CreateShaderProgram(vertex, fragment);
-                CheckProgramState(program, window);
+                Utils_CheckProgramState(program, window);
 
                 glUseProgram(program);
 
@@ -87,11 +124,6 @@ int main()
 
                 while (!glfwWindowShouldClose(window))
                 {
-                    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                    {
-                        glfwSetWindowShouldClose(window, GLFW_TRUE);
-                    }
-
                     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
                     glClear(GL_COLOR_BUFFER_BIT);
                     glDrawArrays(GL_TRIANGLES, 0, 3);

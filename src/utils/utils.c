@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-GLFWwindow* CreateWindow(const char* title)
+GLFWwindow* Utils_CreateWindow(const char* title)
 {
     GLFWwindow* result = glfwCreateWindow(800, 600, title, NULL, NULL);
 
@@ -23,7 +23,7 @@ GLFWwindow* CreateWindow(const char* title)
     return result;
 }
 
-char* ReadTextFile(const char* fileName)
+char* Utils_ReadTextFile(const char* fileName)
 {
     FILE *file = fopen(fileName, "r");
     if (!file)
@@ -53,7 +53,7 @@ char* ReadTextFile(const char* fileName)
     return result;
 }
 
-void CheckShaderState(GLuint shader, GLFWwindow* window)
+void Utils_CheckShaderState(GLuint shader, GLFWwindow* window)
 {
     int success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -70,7 +70,7 @@ void CheckShaderState(GLuint shader, GLFWwindow* window)
     }
 }
 
-void CheckProgramState(GLuint program, GLFWwindow* window)
+void Utils_CheckProgramState(GLuint program, GLFWwindow* window)
 {
     int success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
