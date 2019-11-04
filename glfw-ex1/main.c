@@ -23,19 +23,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     }
 }
 
-VBO CreateVBO()
+VBO CreateVBO(float* vertices, unsigned int vertexCount)
 {
-    float vertices[] =
-    {
-           -0.5f, -0.5f, 0.0f, // bottom-left
-            0.5f, -0.5f, 0.0f, // bottom-right
-            0.0,   0.5f, 0.0f, // center-top
-    };
-
     VBO result;
     glGenBuffers(1, &result);
     glBindBuffer(GL_ARRAY_BUFFER, result);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(float), vertices, GL_STATIC_DRAW);
     return result;
 }
 
@@ -44,8 +37,6 @@ VAO CreateVAO()
     VAO result;
     glGenVertexArrays(1, &result);
     glBindVertexArray(result);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
     return result;
 }
 
@@ -66,50 +57,44 @@ Shader CreateShaderProgram(Shader vertex, Shader fragment)
     return program;
 }
 
-const char* vertexShaderSource = 
-"#version 330 core\n\
-layout (location = 0) in vec3 aPos;\
-\
-void main()\
-{\
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\
-}";
-
-const char* fragmentShaderSource = 
-"#version 330 core\n\
-out vec4 FragColor;\
-\
-void main()\
-{\
-    FragColor = vec4(1.0f, 0.5f, 0.2f, 0.75f);\
-}";
-
 int main()
 {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    if (!glfwInit())
+    {
+        return -1;
+    }
 
-#if __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    GLFWwindow* window = glfwCreateWindow(640, 480, "GLFW - OpenGL", NULL, NULL);
+    GLFWwindow* window = Utils_CreateWindow("GLFW - exercise 1");
 
     if (window)
     {   
         glfwSetKeyCallback(window, KeyCallback);
         glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);  
-        glfwMakeContextCurrent(window);
-        glfwSwapInterval(1);
 
         if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
-            //TODO: fix file loading issue
             //TODO: switch to makefiles
+            const char* vertexShaderSource = Utils_ReadTextFile("ex1.vert");
+            const char* fragmentShaderSource = Utils_ReadTextFile("ex1.frag");
+            //TODO: use index buffer
             if (fragmentShaderSource && vertexShaderSource)
             {
+                float vertices[] =
+                {
+                       -1.0f, -0.5f, 0.0f, // left, bottom-left
+                        0.0f, -0.5f, 0.0f, // left, bottom-right
+                       -0.5,   0.5f, 0.0f, // left, center-top
+
+                        0.0f, -0.5f, 0.0f, // right, bottom-left
+                        1.0f, -0.5f, 0.0f, // right, bottom-right
+                        0.5,   0.5f, 0.0f, // right, center-top
+                };
+
+                VBO vbo = CreateVBO(vertices, ArraySize(vertices));
+                VAO vao = CreateVAO();
+                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+                glEnableVertexAttribArray(0);
+
                 Shader vertex = CreateShader(GL_VERTEX_SHADER, vertexShaderSource);
                 Utils_CheckShaderState(vertex, window);
                 Shader fragment = CreateShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
@@ -119,14 +104,11 @@ int main()
 
                 glUseProgram(program);
 
-                VBO vbo = CreateVBO();
-                VAO vao = CreateVAO();
-
                 while (!glfwWindowShouldClose(window))
                 {
                     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
                     glClear(GL_COLOR_BUFFER_BIT);
-                    glDrawArrays(GL_TRIANGLES, 0, 3);
+                    glDrawArrays(GL_TRIANGLES, 0, 6);
 
                     glfwSwapBuffers(window);
                     glfwPollEvents();
