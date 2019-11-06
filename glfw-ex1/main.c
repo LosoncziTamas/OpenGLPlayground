@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Try to draw 2 triangles next to each other using glDrawArrays by adding more vertices to your data.
+// 1. Try to draw 2 triangles next to each other using glDrawArrays by adding more vertices to your data.
+// 2. Now create the same 2 triangles using two different VAOs and VBOs for their data.
+
 
 typedef GLuint Shader;
 typedef GLuint Program;
