@@ -4,10 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// 1. Try to draw 2 triangles next to each other using glDrawArrays by adding more vertices to your data.
-// 2. Now create the same 2 triangles using two different VAOs and VBOs for their data.
-
-
 typedef GLuint Shader;
 typedef GLuint Program;
 typedef GLuint VAO;
@@ -49,7 +45,6 @@ VAO CreateVAO()
 {
     VAO result;
     glGenVertexArrays(1, &result);
-    glBindVertexArray(result);
     return result;
 }
 
@@ -79,6 +74,98 @@ void _SafeFree(void* memory)
 }
 #define SafeFree(memory) _SafeFree((void*) (memory));
 
+// 1. Try to draw 2 triangles next to each other using glDrawArrays by adding more vertices to your data.
+void FirstSolution(GLFWwindow* window)
+{
+    float vertices[] =
+    {
+            -1.0f, -0.5f, 0.0f, 
+            0.0f, -0.5f, 0.0f,    
+            -0.5,   0.5f, 0.0f,  
+            1.0f, -0.5f, 0.0f,  
+            0.5f,  0.5f, 0.0f
+    };
+
+    unsigned int indices[] =
+    {
+        0, 1, 2,
+        1, 3, 4
+    };
+
+    VBO vbo = CreateVBO(vertices, ArraySize(vertices));
+
+    VAO vao = CreateVAO();
+    glBindVertexArray(vao);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    EBO ebo = CreateEBO(indices, ArraySize(indices));
+
+    while (!glfwWindowShouldClose(window))
+    {
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glDeleteBuffers(1, &ebo);
+    glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
+}
+
+// 2. Now create the same 2 triangles using two different VAOs and VBOs for their data.
+void SecondSolution(GLFWwindow* window)
+{
+    float verticesA[] =
+    {
+            -1.0f, -0.5f, 0.0f, 
+             0.0f, -0.5f, 0.0f,    
+            -0.5,   0.5f, 0.0f
+    };
+    VBO vboA = CreateVBO(verticesA, ArraySize(verticesA));
+
+    VAO vaoA = CreateVAO();
+    glBindVertexArray(vaoA);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    float verticesB[] =
+    {
+            0.0f, -0.5f, 0.0f,
+            1.0f, -0.5f, 0.0f,  
+            0.5f,  0.5f, 0.0f
+    };
+
+    VBO vboB = CreateVBO(verticesB, ArraySize(verticesB));
+
+    VAO vaoB = CreateVAO();
+    glBindVertexArray(vaoB);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    while (!glfwWindowShouldClose(window))
+    {
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        
+        glBindVertexArray(vaoA);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glBindVertexArray(vaoB);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glDeleteBuffers(1, &vboA);
+    glDeleteBuffers(1, &vboB);
+    glDeleteVertexArrays(1, &vaoA);
+    glDeleteVertexArrays(1, &vaoB);
+}
+
 int main()
 {
     if (!glfwInit())
@@ -101,29 +188,7 @@ int main()
 
             if (fragmentShaderSource && vertexShaderSource)
             {
-                float vertices[] =
-                {
-                       -1.0f, -0.5f, 0.0f, 
-                        0.0f, -0.5f, 0.0f,    
-                       -0.5,   0.5f, 0.0f,  
-                        1.0f, -0.5f, 0.0f,  
-                        0.5f,  0.5f, 0.0f
-                };
-
-                unsigned int indices[] =
-                {
-                    0, 1, 2,
-                    1, 3, 4
-                };
-
-                VBO vbo = CreateVBO(vertices, ArraySize(vertices));
-
-                VAO vao = CreateVAO();
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-                glEnableVertexAttribArray(0);
-
-                EBO ebo = CreateEBO(indices, ArraySize(indices));
-
+                
                 Shader vertex = CreateShader(GL_VERTEX_SHADER, vertexShaderSource);
                 Utils_CheckShaderState(vertex, window);
                 Shader fragment = CreateShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
@@ -132,18 +197,8 @@ int main()
                 Utils_CheckProgramState(program, window);
                 glUseProgram(program);
 
-                while (!glfwWindowShouldClose(window))
-                {
-                    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-                    glClear(GL_COLOR_BUFFER_BIT);
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-                    glfwSwapBuffers(window);
-                    glfwPollEvents();
-                }
+                SecondSolution(window);
 
-                glDeleteBuffers(1, &ebo);
-                glDeleteBuffers(1, &vbo);
-                glDeleteVertexArrays(1, &vao);
                 glDeleteProgram(program);
                 glDeleteShader(vertex);
                 glDeleteShader(fragment);
@@ -151,6 +206,7 @@ int main()
                 SafeFree(vertexShaderSource);
                 SafeFree(fragmentShaderSource);
             }
+
             glfwDestroyWindow(window);
         }
     }
