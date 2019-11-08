@@ -10,6 +10,10 @@ typedef GLuint VAO;
 typedef GLuint VBO;
 typedef GLuint EBO;
 
+
+// TODO: switch to makefiles
+// TODO: release unused resources for ex.3
+
 void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -73,6 +77,7 @@ void _SafeFree(void* memory)
     }
 }
 #define SafeFree(memory) _SafeFree((void*) (memory));
+
 
 // 1. Try to draw 2 triangles next to each other using glDrawArrays by adding more vertices to your data.
 void FirstSolution(GLFWwindow* window)
@@ -166,11 +171,11 @@ void SecondSolution(GLFWwindow* window)
     glDeleteVertexArrays(1, &vaoB);
 }
 
-int main()
+void FirstAndSecondSolutionSetup()
 {
     if (!glfwInit())
     {
-        return -1;
+        exit(1);
     }
 
     GLFWwindow* window = Utils_CreateWindow("GLFW - exercise 1");
@@ -182,7 +187,6 @@ int main()
 
         if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
-            //TODO: switch to makefiles
             const char* vertexShaderSource = Utils_ReadTextFile("ex1.vert");
             const char* fragmentShaderSource = Utils_ReadTextFile("ex1.frag");
 
@@ -206,8 +210,102 @@ int main()
                 SafeFree(vertexShaderSource);
                 SafeFree(fragmentShaderSource);
             }
-
             glfwDestroyWindow(window);
         }
     }
+}
+
+// Create two shader programs where the second program uses a different fragment shader that outputs the color yellow; 
+// draw both triangles again where one outputs the color yellow
+void ThirdSolution()
+{
+    if (!glfwInit())
+    {
+        exit(1);
+    }
+
+    GLFWwindow* window = Utils_CreateWindow("Solution - 3");
+    if (window)
+    {
+        glfwSetKeyCallback(window, KeyCallback);
+        glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);  
+
+        if (gladLoadGLLoader(glfwGetProcAddress))
+        {
+            const char* vertexShdrSrc = Utils_ReadTextFile("ex1.vert");
+            const char* fragmentShdrSrcA = Utils_ReadTextFile("ex1.frag");
+            const char* fragmentShdrSrcB = Utils_ReadTextFile("ex3.frag");
+
+            int shadersLoaded = vertexShdrSrc && fragmentShdrSrcA && fragmentShdrSrcB;
+
+            if (shadersLoaded)
+            {
+                Shader vert = CreateShader(GL_VERTEX_SHADER, vertexShdrSrc);
+                Shader fragOrange = CreateShader(GL_FRAGMENT_SHADER, fragmentShdrSrcA);
+                Shader fragYellow = CreateShader(GL_FRAGMENT_SHADER, fragmentShdrSrcB);
+
+                Utils_CheckShaderState(vert, window);
+                Utils_CheckShaderState(fragOrange, window);
+                Utils_CheckShaderState(fragYellow, window);
+
+                Program programOrange = CreateShaderProgram(vert, fragOrange);
+                Program programYellow = CreateShaderProgram(vert, fragYellow);
+
+                Utils_CheckProgramState(programOrange, window);
+                Utils_CheckProgramState(programYellow, window);
+
+                float verticesA[] =
+                {
+                        -1.0f, -0.5f, 0.0f, 
+                         0.0f, -0.5f, 0.0f,    
+                        -0.5,   0.5f, 0.0f
+                };
+                VBO vboA = CreateVBO(verticesA, ArraySize(verticesA));
+
+                VAO vaoA = CreateVAO();
+                glBindVertexArray(vaoA);
+                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+                glEnableVertexAttribArray(0);
+
+                float verticesB[] =
+                {
+                        0.0f, -0.5f, 0.0f,
+                        1.0f, -0.5f, 0.0f,  
+                        0.5f,  0.5f, 0.0f
+                };
+
+                VBO vboB = CreateVBO(verticesB, ArraySize(verticesB));
+
+                VAO vaoB = CreateVAO();
+                glBindVertexArray(vaoB);
+                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+                glEnableVertexAttribArray(0);
+
+                while (!glfwWindowShouldClose(window))
+                {
+                    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+                    glClear(GL_COLOR_BUFFER_BIT);
+
+                    glBindVertexArray(vaoA);
+                    glUseProgram(programOrange);
+                    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+                    glBindVertexArray(vaoB);
+                    glUseProgram(programYellow);
+                    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+                    glfwPollEvents();
+                    glfwSwapBuffers(window);
+                }
+            }
+        }
+        glfwDestroyWindow(window);
+    }
+    glfwTerminate();
+}
+
+int main()
+{
+    // FirstAndSecondSolutionSetup();
+    ThirdSolution();
 }
