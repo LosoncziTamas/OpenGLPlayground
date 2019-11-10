@@ -35,10 +35,10 @@ void ResizeFrameBuffer(GLFWwindow* window, int width, int height)
 }
 
 // ex-1: Adjust the vertex shader so that the triangle is upside down
-int main()
+void FirstSolution()
 {
     Assert(glfwInit(), "GLFW init failure.");
-    window = Utils_CreateWindow("Shaders - ex 1");
+    window = Utils_CreateWindow("Shader exercise 1");
     Assert(window, "Window creation failure");
     Assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "GLAD load failure");
 
@@ -64,6 +64,12 @@ int main()
     glAttachShader(program, fragShdr);
     glLinkProgram(program);
     Utils_CheckProgramState(program, window);
+
+    glDeleteShader(vertShdr);
+    glDeleteShader(fragShdr);
+    free((void*)fragSrc);
+    free((void*)vertSrc);
+
     glUseProgram(program);
 
     float vertices[] = 
@@ -96,4 +102,92 @@ int main()
     }
 
     CleanUp();
+}
+
+// ex-2: Specify a horizontal offset via a uniform and move the triangle to the right side of the screen in the vertex shader using this offset value.
+void SecondSolution()
+{
+    Assert(glfwInit(), "GLFW init failure.");
+    window = Utils_CreateWindow("Shader exercise 1");
+    Assert(window, "Window creation failure");
+    Assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "GLAD load failure");
+
+    glfwSetKeyCallback(window, KeyPressed);
+    glfwSetFramebufferSizeCallback(window, ResizeFrameBuffer);
+
+    const char* vertSrc = Utils_ReadTextFile("offset.vert");
+    const char* fragSrc = Utils_ReadTextFile("orange.frag");
+    Assert(vertSrc && fragSrc, "Shader loading error.");
+
+    GLuint vertShdr = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertShdr, 1, &vertSrc, NULL);
+    glCompileShader(vertShdr);
+    Utils_CheckShaderState(vertShdr, window);
+
+    GLuint fragShdr = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragShdr, 1, &fragSrc, NULL);
+    glCompileShader(fragShdr);
+    Utils_CheckShaderState(fragShdr, window);
+
+    GLuint program = glCreateProgram();
+    glAttachShader(program, vertShdr);
+    glAttachShader(program, fragShdr);
+    glLinkProgram(program);
+    Utils_CheckProgramState(program, window);
+
+    glDeleteShader(vertShdr);
+    glDeleteShader(fragShdr);
+    free((void*)fragSrc);
+    free((void*)vertSrc);
+
+    int offsetParamLocation = glGetUniformLocation(program, "horizontalOffset");
+    glUseProgram(program);
+
+    float vertices[] = 
+    {
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f
+    };
+
+    GLuint vertexBuff;
+    glGenBuffers(1, &vertexBuff);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuff);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    GLuint vertexArr;
+    glGenVertexArrays(1, &vertexArr);
+    glBindVertexArray(vertexArr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+    glEnableVertexAttribArray(0);
+
+    float offset = 0.0f;
+    while (!glfwWindowShouldClose(window))
+    {
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        {
+            offset += 0.01f;
+            glUniform1f(offsetParamLocation, offset);
+        }
+        else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+        {
+            offset -= 0.01f;
+            glUniform1f(offsetParamLocation, offset);
+        }
+        
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glfwPollEvents();
+        glfwSwapBuffers(window);
+    }
+
+    CleanUp();
+}
+
+int main()
+{
+    SecondSolution();
 }
