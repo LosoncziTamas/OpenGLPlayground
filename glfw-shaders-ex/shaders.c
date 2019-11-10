@@ -177,7 +177,78 @@ void SecondSolution()
             offset -= 0.01f;
             glUniform1f(offsetParamLocation, offset);
         }
-        
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glfwPollEvents();
+        glfwSwapBuffers(window);
+    }
+
+    CleanUp();
+}
+
+// Output the vertex position to the fragment shader using the out keyword and set the fragment's color equal to this vertex position. 
+// Once you managed to do this; try to answer the following question: why is the bottom-left side of our triangle black?
+void ThirdSolution()
+{
+    Assert(glfwInit(), "GLFW init failure.");
+    window = Utils_CreateWindow("Shader exercise 1");
+    Assert(window, "Window creation failure");
+    Assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "GLAD load failure");
+
+    glfwSetKeyCallback(window, KeyPressed);
+    glfwSetFramebufferSizeCallback(window, ResizeFrameBuffer);
+
+    const char* vertSrc = Utils_ReadTextFile("default.vert");
+    const char* fragSrc = Utils_ReadTextFile("colorPos.frag");
+    Assert(vertSrc && fragSrc, "Shader loading error.");
+
+    GLuint vertShdr = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertShdr, 1, &vertSrc, NULL);
+    glCompileShader(vertShdr);
+    Utils_CheckShaderState(vertShdr, window);
+
+    GLuint fragShdr = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragShdr, 1, &fragSrc, NULL);
+    glCompileShader(fragShdr);
+    Utils_CheckShaderState(fragShdr, window);
+
+    GLuint program = glCreateProgram();
+    glAttachShader(program, vertShdr);
+    glAttachShader(program, fragShdr);
+    glLinkProgram(program);
+    Utils_CheckProgramState(program, window);
+
+    glDeleteShader(vertShdr);
+    glDeleteShader(fragShdr);
+    free((void*)fragSrc);
+    free((void*)vertSrc);
+
+    glUseProgram(program);
+
+    float vertices[] = 
+    {
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f
+    };
+
+    GLuint vertexBuff;
+    glGenBuffers(1, &vertexBuff);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuff);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    GLuint vertexArr;
+    glGenVertexArrays(1, &vertexArr);
+    glBindVertexArray(vertexArr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+    glEnableVertexAttribArray(0);
+
+    while (!glfwWindowShouldClose(window))
+    {
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwPollEvents();
@@ -189,5 +260,5 @@ void SecondSolution()
 
 int main()
 {
-    SecondSolution();
+    ThirdSolution();
 }
