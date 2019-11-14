@@ -35,7 +35,14 @@ int main()
     const char* fragSrc = Utils_ReadTextFile("texture.frag");
     
     int w, h, channelCount;
-    unsigned char imageData = stbi_load("busojaras.png", &w, &h, &channelCount, 0);
+    unsigned char imageData = stbi_load("graphite.jpg", &w, &h, &channelCount, 0);
+
+    float textCoords[] =
+    {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.5f, 1.0f
+    };
 
     while (!glfwWindowShouldClose(window))
     {
