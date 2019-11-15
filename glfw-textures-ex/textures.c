@@ -36,12 +36,19 @@ int main()
     
     int w, h, channelCount;
     unsigned char imageData = stbi_load("graphite.jpg", &w, &h, &channelCount, 0);
+    assert(imageData);
 
-    float textCoords[] =
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+    glGenerateMipmap(texture);
+
+    float vertices[] = 
     {
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        0.5f, 1.0f
+        -0.5f, 0.0f, 0.0f, /* */ 0.0f, 0.0f, 
+         0.5f, 0.0f, 0.0f, /* */ 1.0f, 0.0f, 
+         0.0f, 1.0f, 0.0f, /* */ 0.5f, 0.0f, 
     };
 
     while (!glfwWindowShouldClose(window))
