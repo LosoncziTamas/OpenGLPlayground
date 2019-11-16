@@ -44,6 +44,8 @@ int main()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
     glGenerateMipmap(texture);
 
+    
+
     float vertices[] = 
     {
         -0.5f, 0.0f, 0.0f, /* */ 0.0f, 0.0f, 
